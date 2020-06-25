@@ -1,0 +1,10 @@
+values:
+  '--ak-header-color-bg': '#ffffff'
+  '--ak-header-color': '#3b3b3b'
+  '--ak-footer-color-bg': '#505050'
+  '--ak-footer-color': '#fcfcfc'
+  '--ak-accent-color': '#2196f3'
+  '--ak-accent-color-light': '#ffffff'
+  '--ak-accent-color-dark': '#0c83e2'
+_core:
+  'default_config_has:h': Xk93PjUdff-jDD_gbw2zF2o0uQ16aq4Ba0xdutQQSxs

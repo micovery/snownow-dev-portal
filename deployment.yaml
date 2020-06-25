@@ -1,0 +1,58 @@
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  generation: 1
+  labels:
+    app: snownow-dev-portal
+  name: snownow-dev-portal
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: snownow-dev-portal
+  template:
+    metadata:
+      labels:
+        app: snownow-dev-portal
+    spec:
+      imagePullSecrets:
+        - name: dev-portal-certs
+      volumes:
+        - name: dev-portal-certs
+          secret:
+            secretName: dev-portal-certs
+      containers:
+        - image: micovery/snownow-dev-portal
+          imagePullPolicy: Always
+          name: snownow-dev-portal
+          ports:
+            - containerPort: 443
+            - containerPort: 80
+          volumeMounts:
+            - name: dev-portal-certs
+              mountPath: "/apache-certs"
+              readOnly: true
+      restartPolicy: Always
+      securityContext: {}
+      terminationGracePeriodSeconds: 30
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: snownow-dev-portal
+  name: snownow-dev-portal
+spec:
+  ports:
+    - name: http
+      port: 80
+      protocol: TCP
+      targetPort: 80
+    - name: https
+      port: 443
+      protocol: TCP
+      targetPort: 443
+  selector:
+    app: snownow-dev-portal
+  type: LoadBalancer
