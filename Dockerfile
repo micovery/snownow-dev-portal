@@ -26,11 +26,11 @@ RUN apt-get update && \
     echo "deb https://packages.sury.org/php/ stretch main" | sudo tee /etc/apt/sources.list.d/php.list && \
     apt-get update && \
     apt-get -y install -y --no-install-recommends \
-              php7.2 php7.2-cli php7.2-bcmath php7.2-bz2 php7.2-intl php7.2-gd \
-              php7.2-mbstring php7.2-mysql php7.2-zip php7.2-sqlite3 \
-              php7.2-curl php7.2-xml php-intl \
-              apache2 libapache2-mod-php7.2 \
-              git unzip cron gnupg supervisor \
+              php7.3 php7.3-cli php7.3-bcmath php7.3-bz2 php7.3-intl php7.3-gd \
+              php7.3-mbstring php7.3-mysql php7.3-zip php7.3-sqlite3 \
+              php7.3-curl php7.3-xml php-intl \
+              apache2 libapache2-mod-php7.3 \
+              git unzip cron gnupg supervisor sendmail ssh-client \
               mysql-server mysql-client patch jq vim && \
     apt-get -y clean && \
     apt-get -y autoclean && \
@@ -47,10 +47,10 @@ ENV DRUPAL_PROJECT_DIR=/drupal/project
 ENV DRUPAL_WEB_DIR=${DRUPAL_PROJECT_DIR}/web
 ENV PATH="${DRUPAL_PROJECT_DIR}/vendor/bin:${PATH}"
 
-# Downgrade PHP version to 7.2
-RUN sudo update-alternatives --set php /usr/bin/php7.2 && \
-    sudo update-alternatives --set phar /usr/bin/phar7.2 && \
-    sudo update-alternatives --set phar.phar /usr/bin/phar.phar7.2 && \
+# Downgrade PHP version to 7.3
+RUN sudo update-alternatives --set php /usr/bin/php7.3 && \
+    sudo update-alternatives --set phar /usr/bin/phar7.3 && \
+    sudo update-alternatives --set phar.phar /usr/bin/phar.phar7.3 && \
     php --ini
 
 # Setup Apigee kickstart project with composer
@@ -61,12 +61,13 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" &&
     \
     mkdir -p ${DRUPAL_PROJECT_DIR} && \
     chmod -R a+rw ${DRUPAL_PROJECT_DIR}  && \
-    composer global require hirak/prestissimo && \
     \
     sudo -u drupal composer create-project apigee/devportal-kickstart-project:${KICKSTART_VERSION} ${DRUPAL_PROJECT_DIR} --no-interaction && \
     \
+    mkdir /root/.ssh && chmod 0700 /root/.ssh && \
+    sudo ssh-keyscan -t rsa github.com > ~/.ssh/known_hosts && \
     cd ${DRUPAL_PROJECT_DIR} && \
-    sudo -u drupal composer config repositories.repo-name vcs git@github.com:micovery/apigee-graphql-drupal-module.git && \
+    sudo -u drupal composer config repositories.repo-name vcs https://github.com/micovery/apigee-graphql-drupal-module.git && \
     sudo -u drupal composer require micovery/apigee-graphql-drupal-module:dev-master && \
     sudo -u drupal composer require drupal/devel && \
     sudo -u drupal composer require drupal/jsonapi_extras:3.14 && \
@@ -172,8 +173,8 @@ RUN service mysql start && \
     sudo chown www-data:www-data -R ${DRUPAL_PROJECT_DIR}/backup && \
     cd ${DRUPAL_PROJECT_DIR}/backup && \
     rsync -avh sites ${DRUPAL_WEB_DIR} && \
-    drush sql-cli  < db.sql && \
     drush config-import --source=${DRUPAL_PROJECT_DIR}/backup/config -y --partial && \
+    drush sql-cli  < db.sql && \
     rm -rf ${DRUPAL_PROJECT_DIR}/backup
 
 # Configure supervisor
@@ -226,10 +227,10 @@ RUN  printf  '#!/bin/bash \n\
       cd /apache-certs \n\
       export OPENSSL_CNF=$(openssl version -d | awk '"'"'{gsub("\\"", "", $2); print $2 "/openssl.cnf"}'"'"')  \n\
       openssl req -new -newkey rsa:4096 -days 365 -nodes -x509 \\\n\
-          -subj "/C=US/ST=CA/L=San Jose/O=Apigee/CN=developer.exco.com" \\\n\
+          -subj "/C=US/ST=CA/L=San Jose/O=Apigee/CN=*.xip.io" \\\n\
           -extensions SAN \\\n\
           -reqexts SAN \\\n\
-          -config <(cat ${OPENSSL_CNF}  <(printf "\\n[SAN]\\nsubjectAltName=DNS:developer.exco.com")) \\\n\
+          -config <(cat ${OPENSSL_CNF}  <(printf "\\n[SAN]\\nsubjectAltName=DNS:*.xip.io")) \\\n\
           -keyout privkey.pem  -out cert.pem \n\
       cp cert.pem fullchain.pem \n\
     else \n\

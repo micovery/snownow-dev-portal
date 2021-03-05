@@ -7,4 +7,4 @@ values:
   '--ak-accent-color-light': '#ffffff'
   '--ak-accent-color-dark': '#0c83e2'
 _core:
-  'default_config_has:h': Xk93PjUdff-jDD_gbw2zF2o0uQ16aq4Ba0xdutQQSxs
+  default_config_hash: Xk93PjUdff-jDD_gbw2zF2o0uQ16aq4Ba0xdutQQSxs
